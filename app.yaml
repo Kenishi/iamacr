@@ -1,0 +1,21 @@
+# Change the application name to your app engine's project name
+application: iamacr
+
+version: 2
+runtime: python27
+api_version: 1
+threadsafe: true
+
+default_expiration: "1d"
+
+handlers:
+- url: /static/(.*)
+  static_files: static/\1
+  upload: static/(.*)
+
+- url: .*
+  script: rssgen.app
+
+libraries:
+- name: webapp2
+  version: "2.5.1"
