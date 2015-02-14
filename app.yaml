@@ -1,5 +1,5 @@
 # Change the application name to your app engine's project name
-application: iamacr
+application: iamacrdemo
 
 version: 2
 runtime: python27
@@ -14,7 +14,7 @@ handlers:
   upload: static/(.*)
 
 - url: .*
-  script: rssgen.app
+  script: main.app
 
 libraries:
 - name: webapp2

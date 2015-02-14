@@ -1,7 +1,0 @@
-function generateURL() {
-	$()
-}
-
-function reset() {
-	
-}
