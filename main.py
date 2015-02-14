@@ -11,9 +11,12 @@ import cgi
 import markdown
 from bs4 import BeautifulSoup
 
+"""Your Google Calendar API Key should go here"""
+CALENDAR_API_KEY = "YOUR_API_KEY"
+
+"""This is the page shown when you open up an RSS event"""
 LINK_URL = "http://iamacrdemo.appspot.com/static/event.html"
-#CALENDAR_API_KEY = "YOUR_API_KEY"
-CALENDAR_API_KEY = "AIzaSyB49VwHUX_oPsuDg0tBeEOKSb0xrc0ZGRA"
+
 LINK_PAGE_HTML = "/static/event.html"
 ERROR_PAGE = "/static/error.htm"
 
@@ -55,22 +58,6 @@ class LinkHandler(webapp2.RequestHandler):
 
 class QueryHandler(webapp2.RequestHandler):
 	event_endpoint = "https://www.googleapis.com/calendar/v3/calendars/amaverify%40gmail.com/events/"
-
-	def createPageURL(self, event):
-		if event:
-			date, time = Util.getDateFromRFC(event['start']['dateTime'])
-			summary = Util.getHTMLFromMarkdown(event['summary'])
-			summary = cgi.escape(summary)
-			desc = Util.getHTMLFromMarkdown(event['description'])
-			desc = cgi.escape(desc)
-
-			url = LINK_PAGE_HTML
-
-			url += "?summary={0}&desc={1}&start={2}".format(summary, desc, date + " " + time)
-			logging.info(url)
-		else:
-			url = ERROR_PAGE
-		return url
 
 	def queryEvent(self, id):
 		accessUrl = self.event_endpoint + id + "?key=" + CALENDAR_API_KEY
