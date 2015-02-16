@@ -2,8 +2,7 @@ import sys
 sys.path.insert(0, 'libs')
 
 import webapp2
-import logging
-import urllib
+import urllib2
 import datetime
 import json
 import re
@@ -17,10 +16,32 @@ CALENDAR_API_KEY = "YOUR_API_KEY"
 """This is the page shown when you open up an RSS event"""
 LINK_URL = "http://iamacrdemo.appspot.com/static/event.html"
 
-LINK_PAGE_HTML = "/static/event.html"
-ERROR_PAGE = "/static/error.htm"
+"""
+The domain the server rests on.
+
+This is needed if you want to restrict the domain your API key
+can be used from.
+
+Example: "http://iamarss.appspot.com" 
+Then you can set your API key to only allow "iamarss.appspot.com"
+"""
+REFERER_DOMAIN = "YOUR_PROJECT_DOMAIN"
 
 class Util:
+
+	"""
+	Helper method which opens a URL using urllib2 and adds the referer
+	domain to the request (Needed if you domain restrict the API key).
+
+	Returns the response without reading it.
+	"""
+	@staticmethod
+	def getURL(url):
+		req = urllib2.Request(url)
+		req.add_header("Referer", REFERER_DOMAIN)
+		resp = urllib2.urlopen(req)
+		return resp
+
 	@staticmethod
 	def getTextFromMarkdown(text):
 		html = markdown.markdown(text)
@@ -34,8 +55,6 @@ class Util:
 
 	@staticmethod
 	def getDateFromRFC(timestamp):
-		
-		"""Add Try-Catch for invalid time formats"""
 		try:
  			dt = datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S-05:00")
 			time = dt.time().strftime("%H:%M")
@@ -61,7 +80,7 @@ class QueryHandler(webapp2.RequestHandler):
 
 	def queryEvent(self, id):
 		accessUrl = self.event_endpoint + id + "?key=" + CALENDAR_API_KEY
-		url = urllib.urlopen(accessUrl)
+		url = Util.getURL(accessUrl)
 
 		resData = {}
 		if url and url.getcode() == 200:
@@ -79,6 +98,24 @@ class QueryHandler(webapp2.RequestHandler):
 
 		return resData
 
+	"""
+	The POST to /query/ is used to parse Markdown and get HTML back.
+
+	POST Request expects 2 paramters:
+	action=m  There are no other actions, always supply 'm'
+	data=STRING  The string to be marked down
+
+	POST Response:
+	JSON Object on success
+	{ 
+		code: 200,
+		data: (string) - The markdown in HTML
+	}
+
+
+	Most Javascript solutions for parsing Markdown required Node.js.
+	Parsing this inside Python was the most reasonable compromise.
+	"""
 	def post(self):
 		action = self.request.get('action', None)
 		if action:
@@ -99,6 +136,32 @@ class QueryHandler(webapp2.RequestHandler):
 		else:
 			self.response.set_status(400)
 
+	"""
+	The GET to /query/ is used to retrieve a JSON containing information
+	on the event.
+
+	GET Request expects 1 parameter:
+
+	id=STRING  The event id
+
+	GET Success (200) returns:
+	{
+		code: 200,
+		summary: (string) - The summary of the event. This is usually the person's name.
+		desc: (string) - The event description. This is usually 2 or 3 words describing the person.
+		start: {
+			dateTime: (string) - The time when the event starts in RFC 3339 format.
+		}
+
+	}
+
+	GET Failure (404) returns:
+	{
+		code: 404,
+		msg: "Event not found."
+	}
+
+	"""
 	def get(self):
 		id = self.request.get('id', None)
 		if id:
@@ -146,13 +209,13 @@ class RSSHandler(webapp2.RequestHandler):
 
 			return events
 
-		def genXMLEntry(self, entry):
+		def genEntryXML(self, entry):
 			date, time = Util.getDateFromRFC(entry["start"])
 
 			xml = "<item>\n"
-			xml += "<title>" + cgi.escape(entry['summary']) + "</title>\n"
+			xml += "<title>" + cgi.escape(entry['summary']) + " " + date "</title>\n"
 			xml += "<link>" + LINK_URL + "?id=" + entry["id"] + "</link>\n"
-			xml += "<description>" + cgi.escape(entry["keywords"]) + " \n&lt;br/&gt;" +  date + " " + time + "</description>\n"
+			xml += "<description>" + cgi.escape(entry["keywords"]) + "</description>\n"
 			xml += "<guid>" + entry["id"] + "</guid>\n"
 			xml += "</item>\n"
 			return xml
@@ -167,7 +230,7 @@ class RSSHandler(webapp2.RequestHandler):
 					"<language>en-us</language>\n")
 
 			for e in data:
-				xml += self.genXMLEntry(e)
+				xml += self.genEntryXML(e)
 
 			xml += "</channel>\n</rss>"
 			return xml
@@ -185,7 +248,7 @@ class RSSHandler(webapp2.RequestHandler):
 			accessURL = "".join(accessURL)
 
 			logging.info(accessURL)
-			data = urllib.urlopen(accessURL).read()
+			data = Util.getURL(accessURL).read()
 			return data
 
 		def get(self):
