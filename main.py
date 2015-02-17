@@ -34,7 +34,7 @@ import cgi
 import markdown
 from bs4 import BeautifulSoup
 
-"""Your Google Calendar API Key should go here"""
+"""Your API Key should go here"""
 CALENDAR_API_KEY = "YOUR_API_KEY"
 
 """This is the page shown when you open up an RSS event"""
@@ -87,17 +87,6 @@ class Util:
  			date, time = timestamp.split('T')
 
 		return (str(date), str(time))		
-
-# This exists because when I tested this using Feedly it cached some old links
-# this is a redirect to fix the problem. Eventually it can be removed.
-class LinkHandler(webapp2.RequestHandler):
-	def get(self):
-		id = self.request.get('id', None)
-		if id:
-			url = "/static/event.html?id=" + id
-			self.redirect(url)
-		else:
-			self.response.set_status(404)
 
 class QueryHandler(webapp2.RequestHandler):
 	event_endpoint = "https://www.googleapis.com/calendar/v3/calendars/amaverify%40gmail.com/events/"
@@ -297,4 +286,4 @@ class RSSHandler(webapp2.RequestHandler):
 
 			pass
 
-app = webapp2.WSGIApplication([('/iamacrss', RSSHandler), (r'/link/.*', LinkHandler), (r'/query/.*', QueryHandler)], debug=True)
+app = webapp2.WSGIApplication([('/iamacrss', RSSHandler), (r'/link/.*', LinkHandler), (r'/query/.*', QueryHandler)], debug=False)
