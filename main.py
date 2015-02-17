@@ -37,8 +37,11 @@ from bs4 import BeautifulSoup
 """Your API Key should go here"""
 CALENDAR_API_KEY = "YOUR_API_KEY"
 
-"""This is the page shown when you open up an RSS event"""
-LINK_URL = "http://iamacrdemo.appspot.com/static/event.html"
+"""
+	This is the page shown when you open up an RSS event
+	Add your project name here so the link will work.
+"""
+LINK_URL = "http://YOUR_PROJECT_NAME.appspot.com/static/event.html"
 
 """
 The domain the server rests on.
