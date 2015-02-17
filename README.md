@@ -49,6 +49,8 @@ Next, open up the main.py.
 
 Update the `CALENDAR_API` with your API key.
 
+Update the `LINK_URL` with your project name so that the app can find the right path to `event.html`
+
 Update the `REFERER_DOMAIN` if you specified a domain restriction when creating your API Key.
 
 Save main.py and close.
